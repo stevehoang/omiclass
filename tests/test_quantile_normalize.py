@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import pytest
-from omiclass.utils import quantile_normalize
+from omiclass.normalize import quantile_normalize
 
 
 def test_basic_functionality():
