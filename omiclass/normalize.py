@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from .utils import all_finite_numeric
+from .utils import all_finite_numeric, bit_flip
 
 
 def quantile_normalize(df, axis=0):
@@ -57,14 +57,8 @@ def quantile_normalize(df, axis=0):
     Wikipedia: https://en.wikipedia.org/wiki/Quantile_normalization
     """
 
-    # set axes
-    if axis == 0:
-        a1 = 0
-        a2 = 1
-    elif axis == 1:
-        a1 = 1
-        a2 = 0
-    else:
+    # check axes
+    if axis not in [0, 1]:
         raise ValueError("axis must be 0 or 1")
 
     # ensure that all values in df are numeric
@@ -72,8 +66,8 @@ def quantile_normalize(df, axis=0):
         raise ValueError("All values in df must be either int or float. NaN values are not allowed.")
 
     # generate distribution from sample means
-    df_sorted = pd.DataFrame(np.sort(df.values, axis=a1), index=df.index, columns=df.columns)
-    df_mean = df_sorted.mean(axis=a2)
+    df_sorted = pd.DataFrame(np.sort(df.values, axis=axis), index=df.index, columns=df.columns)
+    df_mean = df_sorted.mean(axis=bit_flip(axis))
 
     # quantile normalize
     df_normalized = quantile_normalize_with_target(df, df_mean, axis=axis)
@@ -140,7 +134,7 @@ def quantile_normalize_with_target(df, target, axis=0):
         quantile_normalize: Function for regular quantile normalization without a target distribution.
         """
 
-    # set axes
+    # check axes
     if axis not in [0, 1]:
         raise ValueError("axis must be 0 or 1")
 
