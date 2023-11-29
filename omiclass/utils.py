@@ -1,6 +1,7 @@
 import pandas as pd
+from pandas import DataFrame, Series
 
-def all_finite_numeric(df):
+def all_finite_numeric(df: DataFrame) -> bool:
     """
      Check if all elements in a pandas DataFrame are finite numeric values.
 
@@ -36,7 +37,7 @@ def all_finite_numeric(df):
     return res
 
 
-def bit_flip(input_value):
+def bit_flip(input_value: int) -> int:
     """
     Flips input from 0 to 1 or from 1 to 0.
 

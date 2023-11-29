@@ -1,9 +1,10 @@
 import pandas as pd
+from pandas import DataFrame, Series
 import numpy as np
 from .utils import all_finite_numeric, bit_flip
 
 
-def quantile_normalize(df, axis=0):
+def quantile_normalize(df: DataFrame, axis=0) -> DataFrame:
     """
     Perform quantile normalization on a pandas DataFrame along the specified axis.
 
@@ -75,7 +76,7 @@ def quantile_normalize(df, axis=0):
     return df_normalized
 
 
-def quantile_normalize_with_target(df, target, axis=0):
+def quantile_normalize_with_target(df: DataFrame, target: Series, axis=0) -> DataFrame:
     """
         Perform quantile normalization on a pandas DataFrame using a target distribution.
 
@@ -157,3 +158,7 @@ def quantile_normalize_with_target(df, target, axis=0):
     df_normalized = df_rank.map(lambda x: target_sorted[x])
 
     return df_normalized
+
+
+def fsqn_datasets(df_target: DataFrame, df_to_norm: DataFrame, feature_axis=0) -> DataFrame:
+    pass
