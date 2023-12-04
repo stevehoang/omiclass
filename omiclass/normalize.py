@@ -141,7 +141,8 @@ def quantile_normalize_with_target(df: DataFrame, target: Series, axis=0) -> Dat
 
     # check that dimensions are compatible
     if df.shape[axis] != len(target):
-        raise ValueError("Dimensions of df are not compatible with target. Did you select the correct axis?")
+        raise ValueError("Dimensions of df are not compatible with target. df dimensions: {df.shape}, "
+                         "target dimensions: {target.shape}. Did you select the correct axis?")
 
     # ensure that all values in df are numeric
     if not all_finite_numeric(df):
@@ -160,5 +161,66 @@ def quantile_normalize_with_target(df: DataFrame, target: Series, axis=0) -> Dat
     return df_normalized
 
 
-def fsqn_datasets(df_target: DataFrame, df_to_norm: DataFrame, feature_axis=0) -> DataFrame:
-    pass
+def fsqn_dataset(df_target: DataFrame, df_to_norm: DataFrame, axis=1) -> DataFrame:
+    """
+        Performs Feature-Specific Quantile Normalization (FSQN) on the given DataFrame (`df_to_norm`) against a target
+        DataFrame (`df_target`).
+
+        This function normalizes each feature in `df_to_norm` to match feature distributions of `df_target`. The
+        normalization can be done either across rows (each column independtly, axis=0) or across columns (each row
+        independently, axis=1). It checks that the dimensions and indices/columns (depending on the axis) of the two
+        DataFrames match before proceeding with the normalization.
+
+        Parameters:
+        df_target (DataFrame): The target DataFrame whose distribution is to be used for normalization.
+        df_to_norm (DataFrame): The DataFrame to be normalized.
+        axis (int, optional): Axis along which to normalize the data. Default is 1 (columns).
+            - axis=0: Normalize each column independently (the distribition is across rows for a given column).
+            - axis=1: Normalize each row independently (the distribution is across columns for a given row) .
+
+        Returns:
+        DataFrame: A DataFrame with the same dimensions as `df_to_norm`, normalized according to `df_target`.
+
+        Raises:
+        ValueError: If `axis` is not 0 or 1.
+        ValueError: If the dimensions of `df_target` and `df_to_norm` are not compatible.
+        ValueError: If the row indices (when axis=1) or column names (when axis=0) do not match between `df_target` and
+        `df_to_norm`.
+
+        Example:
+        >>> df_target = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
+        >>> df_to_norm = pd.DataFrame({'A': [7, 8, 9], 'B': [10, 11, 12]})
+        >>> fsqn_result = fsqn_datasets(df_target, df_to_norm, axis=1)
+
+        See Also
+        --------
+        Franks JM, et al. Feature specific quantile normalization endables cross-platform classification of molecular
+        subtypes using gene expression data. Bioinformatics, 2018.
+        """
+    # check axes
+    if axis not in [0, 1]:
+        raise ValueError("axis must be 0 or 1")
+
+    # check that dimensions are compatible
+    if df_target.shape[axis] != df_to_norm.shape[axis]:
+        raise ValueError("Dimensions of df are not compatible with target. Target dimensions: {df_target.shape}, "
+                         "df_to_norm dimensions: {df_to_norm.shape}. Did you select the correct feature_axis?")
+
+    # do FSQN
+    if axis == 1:
+        if set(df_to_norm.index) != set(df_target.index):
+            raise ValueError("The row indices of the two data frames do not match.")
+        else:
+            inds = df_to_norm.index
+        fsqn_results = [quantile_normalize_with_target(df_to_norm.iloc[[i]], df_target.iloc[i], axis=axis)
+                        for i in inds]
+        fsqn_results = pd.concat(fsqn_results, axis=0)
+    else:
+        if set(df_to_norm.columns) != set(df_target.columns):
+            raise ValueError("The column names of the two data frames do not match.")
+        else:
+            inds = df_to_norm.columns
+        fsqn_results = [quantile_normalize_with_target(df_to_norm[[i]], df_target[i], axis=axis) for i in inds]
+        fsqn_results = pd.concat(fsqn_results, axis=1)
+
+    return fsqn_results
